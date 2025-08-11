@@ -3,7 +3,6 @@ module Memory_8x8x8(
 input [7:0] data_in,
 input [2:0] col_addr,
 input [2:0] row_addr,
-input [2:0] layer,
 input wrt_read,
 input reset,
 input clk,
@@ -15,10 +14,10 @@ if(reset) begin
   data_out <= 8'b00000000;
 end else  begin 
 if(~wrt_read) begin
-memory[row_addr][col_addr][layer]<=data_in;
+memory[row_addr][col_addr]<=data_in;
 data_out<=8'b00000000;
 end else begin
-data_out <= memory[row_addr][col_addr][layer];
+data_out <= memory[row_addr][col_addr];
 end
 end
 end
