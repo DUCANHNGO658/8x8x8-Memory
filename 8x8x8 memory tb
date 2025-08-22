@@ -1,52 +1,26 @@
-`timescale 1ns / 1ps
+module memory_8x8 (
+    input  clk, reset, wrt_read,
+    input  [7:0] data_in,
+    input  [2:0] row_addr,
+    input  [2:0] col_addr,
+    output reg [7:0] data_out
+);
+    reg [7:0] ram [2:0][2:0];
+    integer r, c;
 
-module memory_8x8x8_tb;
-reg [7:0] data_in;
-reg [2:0] col_addr;
-reg [2:0] row_addr;
-reg wrt_read;
-reg reset;
-reg clk;
-
-wire [7:0] data_out;
-Memory_8x8x8 dut (
-.data_in(data_in),
-.col_addr(col_addr),
-.row_addr(row_addr),
-.wrt_read(wrt_read),
-.reset(reset),
-.clk(clk),
-.data_out(data_out)
- );
- // 10ns period
-always #5 clk = ~clk;
-
-initial begin
-clk = 0;
-reset = 1;
-wrt_read = 0;
-data_in = 8'b00000000;
-row_addr = 3'b000;
-col_addr = 3'b000;
-
-// Wait for global reset
-#10;
-reset = 0;
-// Test case 1: Write to memory[1][2] = 8'b10101010
-data_in = 8'b10101010;
-row_addr = 3'b001;
-col_addr = 3'b010;
-wrt_read = 0; // Write enable
-#10;
-
-// Test case 2: Read from memory[1][2]
-data_in = 8'b00000000; // should be ignored
-wrt_read = 1; // Read enable
-#10;
-// Test case 3: Read from another location (should return 0)
-row_addr = 3'b000;
-col_addr = 3'b000;
-#10;
-$stop;
-end
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            for (r = 0; r < 3; r = r + 1)
+                for (c = 0; c < 3; c = c + 1)
+                    ram[r][c] <= 8'b00000000;
+            data_out <= 8'b00000000;
+        end else begin
+            if (wrt_read == 1'b0) begin
+                ram[row_addr][col_addr] <= data_in;
+                data_out <= 8'b00000000; 
+            end else begin
+                data_out <= ram[row_addr][col_addr];
+            end
+        end
+    end
 endmodule
