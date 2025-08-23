@@ -1,26 +1,73 @@
-module memory_8x8 (
-    input  clk, reset, wrt_read,
-    input  [7:0] data_in,
-    input  [2:0] row_addr,
-    input  [2:0] col_addr,
-    output reg [7:0] data_out
-);
-    reg [7:0] ram [2:0][2:0];
-    integer r, c;
+`timescale 1ns / 1ps
+module tb_memory;
 
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            for (r = 0; r < 3; r = r + 1)
-                for (c = 0; c < 3; c = c + 1)
-                    ram[r][c] <= 8'b00000000;
-            data_out <= 8'b00000000;
-        end else begin
-            if (wrt_read == 1'b0) begin
-                ram[row_addr][col_addr] <= data_in;
-                data_out <= 8'b00000000; 
-            end else begin
-                data_out <= ram[row_addr][col_addr];
-            end
-        end
+    reg [7:0] data_in;
+    reg [2:0] col_addr, row_addr;
+    reg wrt_read, reset, clk;
+    wire [7:0] data_out;
+
+    // Instantiate the module
+    memory_8x8 uut (
+        .data_in(data_in),
+        .col_addr(col_addr),
+        .row_addr(row_addr),
+        .wrt_read(wrt_read),
+        .reset(reset),
+        .clk(clk),
+        .data_out(data_out)
+    );
+
+    // Clock generator
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk; // 10ns clock period
     end
+
+    // Test procedure
+    initial begin
+       // Initial values
+    reset    = 1'b1;           
+    wrt_read = 1'b0;           
+    data_in  = 8'b00000000;
+    row_addr = 3'b000; 
+    col_addr = 3'b000;
+
+    #20;                       
+    reset = 1'b0;             
+    #10;                      
+
+        // Write 1 to [0][0]
+        wrt_read = 0;
+        row_addr = 3'b000; col_addr = 3'b000;
+        data_in = 8'b00000001;
+        #10;
+
+        // Write 1 to [1][2]
+        row_addr = 3'b001; col_addr = 3'b010;
+        data_in = 8'b00000100;
+        #10;
+
+        // Read row 0
+        wrt_read = 1;
+        row_addr = 3'b000; col_addr = 3'b000;
+        #10;
+        
+        row_addr = 3'b001; col_addr = 3'b010;
+        #10;
+
+        wrt_read = 1'b0;
+        row_addr = 3'b010; col_addr = 3'b001; 
+        data_in  = 8'b00100111;              
+        #10; 
+
+        wrt_read = 1'b1;
+        row_addr = 3'b010; col_addr = 3'b001;
+        #10;
+
+        
+
+        // Finish
+        $finish;
+    end
+
 endmodule
